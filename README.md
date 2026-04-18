@@ -6,7 +6,7 @@
 | | |
 |---|---|
 | **Environment** | Microsoft Sentinel — Log Analytics Workspace (`law-cyber-range`) |
-| **Analyst** | *Katie Plaster* |
+| **Analyst** | *Katie aka ktx0r* |
 | **Hunt Type** | Hypothesis-Driven / Incident-Triggered |
 | **Telemetry** | `SigninLogs` · `CloudAppEvents` · `EmailEvents` |
 | **Hunt Window** | 2026-02-25 21:00 UTC → 2026-02-26 00:00 UTC |

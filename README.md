@@ -6,8 +6,7 @@
 | | |
 |---|---|
 | **Environment** | Microsoft Sentinel / Log Analytics Workspace (`law-cyber-range`) |
-| **Analyst** | *[Your Name]* |
-| **Program** | Josh Madakor Cyber Range |
+| **Analyst** | *Katie aka ktx0r* |
 | **Hunt Type** | Hypothesis-Driven / Incident-Triggered |
 | **Telemetry** | `SigninLogs` · `CloudAppEvents` · `EmailEvents` |
 | **Hunt Window** | 2026-02-25 21:00 UTC → 2026-02-26 00:00 UTC |
@@ -616,9 +615,3 @@ The `Broke sharing inheritance` events in OneDrive are an underexamined finding.
 | E-11 | | `SigninLogs` | Session ID `00225cfa-a0ff-fb46-a079-5d152fcdf72a` visible in E-06/E-07 |
 | E-12 | | Sentinel | Detection Rule 1: Suspicious Inbox Rule Minimal Name |
 | E-13 | | Sentinel | Detection Rule 2: MFA Fatigue Pattern |
-
----
-
-*[Your Name] · [Date Completed]*
-*Josh Madakor Cyber Range · Microsoft Sentinel Lab*
-*Scattered Spider BEC Investigation LogN Pacific Financial Services (Simulated)*

@@ -1,7 +1,5 @@
 # Threat Hunt: Scattered Spider
-### *Microsoft Sentinel / Log Analytics Workspace | BEC (Business Email Compromise) Investigation*
-
----
+### *Microsoft Sentinel / Log Analytics Workspace BEC (Business Email Compromise) Investigation*
 
 | | |
 |---|---|
@@ -13,8 +11,6 @@
 | **Threat Actor** | Scattered Spider (UNC3944 / Octo Tempest) |
 | **Verdict** | ⚠ Confirmed Threat: Full BEC Kill Chain |
 | **Financial Exposure** | £24,500 fraudulent wire transfer (frozen by external bank fraud detection) |
-
----
 
 ## Table of Contents
 
@@ -68,7 +64,7 @@ The hunt was initiated after the bank flagged a suspicious £24,500 wire transfe
 
 ### Phase 1: Identity Confirmation
 
-I started by confirming the identity of the user named in the bank fraud alert, querying `SigninLogs` for Mark Smith's account.
+I started by confirming the identity of the user named in the bank fraud alert, querying `SigninLogs` for Mark Smith's account inside Log Analystics Workspace in Microsoft Sentinel using KQL. I search for simply, 'mark' within the given timeframe and there was only one result as shown.
 
 ```kql
 SigninLogs

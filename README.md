@@ -5,7 +5,7 @@
 
 | | |
 |---|---|
-| **Environment** | Microsoft Sentinel / Log Analytics Workspace (`law-cyber-range`) |
+| **Environment** | Microsoft Sentinel ---> Log Analytics Workspace |
 | **Analyst** | *[Katie aka ktx0r]* |
 | **Hunt Type** | Hypothesis-Driven / Incident-Triggered |
 | **Telemetry** | `SigninLogs` · `CloudAppEvents` · `EmailEvents` |

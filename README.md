@@ -1,5 +1,5 @@
-# Threat Hunt: Scattered Spider BEC
-### Microsoft Sentinel / Log Analytics Workspace | BEC Investigation
+# Threat Hunt: Scattered Spider
+### *Microsoft Sentinel / Log Analytics Workspace | BEC (Business Email Compromise) Investigation*
 
 ---
 

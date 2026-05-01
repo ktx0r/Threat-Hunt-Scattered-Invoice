@@ -199,8 +199,6 @@ CloudAppEvents
 
 ![Rule 1 RawEventData: full parameters including ForwardTo and keywords](screenshots/06-rule1-parameters.png)
 
-![Rule 1 continued: StopProcessingRules, SessionId, UserId confirmed](screenshots/07-rule1-continued.png)
-
 **Rule 1: Financial Collection (name: `.`)**
 
 | Parameter | Value |
@@ -212,7 +210,7 @@ CloudAppEvents
 | CreationTime | `2026-02-25T22:02:33Z` |
 | SessionId | `00225cfa-a0ff-fb46-a079-5d152fcdf72a` |
 
-![Rule 2 parameters: deletion keywords and DeleteMessage: True](screenshots/08-rule2-parameters.png)
+![Rule 2 parameters: deletion keywords and DeleteMessage: True](screenshots/07-rule2-parameters.png)
 
 **Rule 2: Security Alert Suppression (name: `..`)**
 
@@ -241,7 +239,7 @@ EmailEvents
           Subject, EmailDirection, SenderIPv4
 ```
 
-![EmailEvents fraud email: full expanded row showing all fields](screenshots/09-fraud-email.png)
+![EmailEvents fraud email: full expanded row showing all fields](screenshots/08-fraud-email.png)
 
 **Result:**
 
@@ -275,7 +273,7 @@ CloudAppEvents
 | order by TimeGenerated asc
 ```
 
-![Scope expansion: OneDrive and SharePoint access with Broke sharing inheritance events](screenshots/10-scope-expansion.png)
+![Scope expansion: OneDrive and SharePoint access with Broke sharing inheritance events](screenshots/09-scope-expansion.png)
 
 **Result:** After sending the fraud email, the attacker accessed:
 - `Microsoft OneDrive for Business`: file access, list creation, sharing permission changes
@@ -605,14 +603,13 @@ The `Broke sharing inheritance` events in OneDrive are still unresolved. Most BE
 | E-03 | `03-mfa-count.png` | `SigninLogs` | Count query confirming 2x ResultType 50074 from attacker IP |
 | E-04 | `04-device-profile.png` | `SigninLogs` | Ubuntu Linux, Firefox 147.0, isCompliant: false, isManaged: false |
 | E-05 | `05-cloudappevents-sequence.png` | `CloudAppEvents` | Full post-auth activity: MailItemsAccessed → rules → Send → SharePoint |
-| E-06 | `06-rule1-parameters.png` | `CloudAppEvents` | Rule 1 RawEventData: name, ForwardTo, keywords, session ID |
-| E-07 | `07-rule1-continued.png` | `CloudAppEvents` | Rule 1 continued: StopProcessingRules, SessionId, UserId, ResultStatus |
-| E-08 | `08-rule2-parameters.png` | `CloudAppEvents` | Rule 2 parameters: name `..`, deletion keywords, DeleteMessage: True |
-| E-09 | `09-fraud-email.png` | `EmailEvents` | Fraudulent BEC email: recipient, subject, Intra-org, sender IP match |
-| E-10 | `10-scope-expansion.png` | `CloudAppEvents` | OneDrive/SharePoint access: FileAccessed, Broke sharing inheritance |
-| E-11 | | `SigninLogs` | Session ID `00225cfa-a0ff-fb46-a079-5d152fcdf72a`, visible in E-06/E-07 |
-| E-12 | | Sentinel | Detection Rule 1: Suspicious Inbox Rule, Minimal Name |
-| E-13 | | Sentinel | Detection Rule 2: MFA Fatigue Pattern |
+| E-06 | `06-rule1-parameters.png` | `CloudAppEvents` | Rule 1 RawEventData: name, ForwardTo, keywords, session ID, StopProcessingRules, SessionId, UserId, ResultStatus |
+| E-07 | `08-rule2-parameters.png` | `CloudAppEvents` | Rule 2 parameters: name `..`, deletion keywords, DeleteMessage: True |
+| E-08 | `09-fraud-email.png` | `EmailEvents` | Fraudulent BEC email: recipient, subject, Intra-org, sender IP match |
+| E-09 | `10-scope-expansion.png` | `CloudAppEvents` | OneDrive/SharePoint access: FileAccessed, Broke sharing inheritance |
+| E-10 | | `SigninLogs` | Session ID `00225cfa-a0ff-fb46-a079-5d152fcdf72a`, visible in E-06/E-07 |
+| E-11 | | Sentinel | Detection Rule 1: Suspicious Inbox Rule, Minimal Name |
+| E-12 | | Sentinel | Detection Rule 2: MFA Fatigue Pattern |
 
 ---
 

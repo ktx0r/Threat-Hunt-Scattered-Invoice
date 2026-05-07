@@ -28,8 +28,6 @@
 12. [Lessons Learned & Next Hunt Hypotheses](#12-lessons-learned--next-hunt-hypotheses)
 13. [Evidence Index](#13-evidence-index)
 
----
-
 ## 1. Executive Summary
 
 In this hunt, I investigated a confirmed Business Email Compromise targeting the finance department of LogN Pacific Financial Services. The hunt was conducted entirely in Microsoft Sentinel's Log Analytics Workspace across three data sources covering a two-hour window on the evening of 25 February 2026.
@@ -37,8 +35,6 @@ In this hunt, I investigated a confirmed Business Email Compromise targeting the
 The full attack chain was confirmed and attributed to **Scattered Spider (UNC3944)**, a financially motivated group known for targeting MGM Resorts, Caesars Entertainment, and multiple UK financial institutions. The attacker used pre-obtained credentials to bypass MFA through push bombing, accessed the victim's mailbox via Outlook Web, created two covert inbox rules to forward financial emails and delete security alerts, then sent a thread-hijacked BEC email that resulted in a **£24,500 fraudulent wire transfer attempt**.
 
 The entire attack, from MFA approval to fraud email, took **under 35 minutes** and triggered zero internal alerts. Funds were only frozen because the bank caught it externally.
-
----
 
 ## 2. Hypothesis & Scope
 
@@ -58,8 +54,6 @@ The hunt was initiated after the bank flagged a suspicious £24,500 wire transfe
 | `CloudAppEvents` | Microsoft Defender for Cloud Apps | Mailbox activity, inbox rule creation, cloud app access |
 | `EmailEvents` | Microsoft Defender for Office 365 | Email send/receive events, sender IP, direction, subject |
 
----
-
 ## 3. Investigation
 
 ### Phase 1: Identity Confirmation
@@ -75,8 +69,6 @@ SigninLogs
 ![Identity pivot: m.smith@lognpacific.org confirmed](screenshots/01-identity-pivot.png)
 
 **Result:** `m.smith@lognpacific.org` confirmed. All subsequent queries pivot on this account and the attacker IP identified in Phase 2.
-
----
 
 ### Phase 2: Authentication Analysis
 
@@ -117,8 +109,6 @@ SigninLogs
 
 **Result:** 2 × `ResultType 50074` from the attacker IP within the attack window.
 
----
-
 ### Phase 3: Device Profile Analysis
 
 I queried the device and browser details on the attacker session to confirm it wasn't coming from a managed corporate endpoint.
@@ -147,8 +137,6 @@ In plain terms: every company-issued laptop has software on it that identifies i
 | UserAgent | `Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0` |
 
 Three anomaly signals on one session: foreign country, unmanaged OS, non-corporate browser. No alert fired on any of them.
-
----
 
 ### Phase 4: Post-Authentication Activity
 
@@ -181,8 +169,6 @@ CloudAppEvents
 | 22:07+ | `Broke sharing inheritance` | File sharing permissions altered |
 
 The attacker read the inbox before setting up persistence — they needed to understand Mark's vendor relationships and active threads to make the fraud convincing. That sequencing is intentional.
-
----
 
 ### Phase 5: Inbox Rule Analysis
 
@@ -225,8 +211,6 @@ Rule 1 forwards financial emails to an attacker-controlled address. Rule 2 perma
 
 The rule names — `.` and `..` — are worth calling out specifically. Inbox rules normally have descriptive names like "Move newsletters to folder." A single period is essentially invisible when you're scanning a list. It's designed to be skipped over. That's not an accident.
 
----
-
 ### Phase 6: Fraud Execution
 
 I pivoted to `EmailEvents` to find the fraudulent email and confirm it came from the same attacker session.
@@ -256,8 +240,6 @@ The `RE:` prefix confirms thread hijacking — the attacker found an active invo
 
 The `Intra-org` direction is significant beyond the technical detail: it means the email traveled entirely within the company's own email system, between two employees. All the filters designed to catch suspicious emails from outside the organization — spam filters, phishing detection, sender reputation checks — don't apply to emails between internal accounts. The attacker used a compromised internal account specifically because it bypasses the layer of security most companies focus on.
 
----
-
 ### Phase 7: Scope Expansion
 
 I checked `CloudAppEvents` for any cloud storage access beyond the mailbox to assess the full data exposure footprint.
@@ -281,8 +263,6 @@ CloudAppEvents
 
 The `Broke sharing inheritance` events indicate the attacker changed file permissions on OneDrive items, possibly staging files for external access. In plain terms: they didn't just read files — they changed who was allowed to access them, which is a common step before exfiltrating data out of an organization. Full data exposure scope requires a dedicated file access audit.
 
----
-
 ### Phase 8: Session Correlation
 
 All attacker activity across all three tables ties back to a single authenticated session.
@@ -295,8 +275,6 @@ Confirmed in:
 - `EmailEvents`: correlates to the same session
 
 This confirms the entire kill chain was one operator, one session.
-
----
 
 ## 4. Attack Timeline
 
@@ -355,8 +333,6 @@ This confirms the entire kill chain was one operator, one session.
                 Sessions revoked, inbox rules deleted, credentials rotated
 ```
 
----
-
 ## 5. Confirmed Findings
 
 ### Finding 1: Account Compromise via MFA Fatigue
@@ -372,8 +348,6 @@ This confirms the entire kill chain was one operator, one session.
 
 The attacker generated repeated MFA push notifications until Mark approved one. No Conditional Access policy was enforced on the session despite a foreign IP, unmanaged device, and new geolocation all being present at the same time.
 
----
-
 ### Finding 2: Persistent Collection via Covert Inbox Rules
 
 | | |
@@ -386,8 +360,6 @@ The attacker generated repeated MFA push notifications until Mark approved one. 
 | **Evidence** | CloudAppEvents: New-InboxRule x2, RawEventData parameters |
 
 Two rules created in under 90 seconds: one for collection, one for suppression. Both use `StopProcessingRules: True`. Rule 2 uses `DeleteMessage: True` — these emails weren't just redirected, they were permanently deleted. If Mark had gone looking for a security alert from Microsoft about an unusual login, there wouldn't have been one to find.
-
----
 
 ### Finding 3: Thread-Hijacked BEC / Fraudulent Wire Transfer
 
@@ -402,8 +374,6 @@ Two rules created in under 90 seconds: one for collection, one for suppression. 
 
 The attacker used context from the mailbox reconnaissance phase to craft a convincing reply to a real invoice thread. It was delivered internally, bypassing all external controls. The bank caught it. No internal control did.
 
----
-
 ### Finding 4: Cloud Storage Access and Permission Modification
 
 | | |
@@ -414,9 +384,7 @@ The attacker used context from the mailbox reconnaissance phase to craft a convi
 | **Status** | Full data exposure scope requires targeted file access audit |
 | **Evidence** | CloudAppEvents: FileAccessed, ListCreated, Broke sharing inheritance |
 
-After the fraud email was sent, the attacker accessed OneDrive and SharePoint and modified sharing permissions on files. The extent of what was accessed or staged for exfiltration is still being assessed.
-
----
+After the fraud email was sent, the attacker accessed OneDrive and SharePoint and modified sharing permissions on files. The extent of what was accessed or staged for exfiltration is still being assessed
 
 ### Finding 5: Conditional Access Policy Gap (Root Cause)
 
@@ -427,8 +395,6 @@ After the fraud email was sent, the attacker accessed OneDrive and SharePoint an
 | **Impact** | MFA enforcement not applied; single-factor auth succeeded from foreign IP |
 
 The compromised account was not covered by a Conditional Access policy. In plain terms: Conditional Access is a set of rules that say "before we let someone log in, check where they're coming from, what device they're on, and whether we trust it." Those rules existed in this environment — they just weren't applied to Mark's account. This is the single gap that made everything else possible. The tools to prevent it exist natively in M365. They weren't configured.
-
----
 
 ## 6. MITRE ATT&CK Mapping
 
@@ -446,8 +412,6 @@ The compromised account was not covered by a Conditional Access policy. In plain
 
 **Threat Actor:** Scattered Spider (UNC3944 / Octo Tempest / G1015)
 
----
-
 ## 7. Detection Gaps
 
 | Gap | Impact | Evidence |
@@ -459,8 +423,6 @@ The compromised account was not covered by a Conditional Access policy. In plain
 | No device compliance enforcement | Unmanaged Linux device granted full M365 access | `isManaged: false` |
 | External auto-forwarding not blocked | Financial emails forwarded externally unimpeded | No transport rule |
 | No intra-org BEC detection | Fraudulent email delivered without inspection | `Intra-org` bypasses filters |
-
----
 
 ## 8. Recommendations
 
@@ -485,13 +447,9 @@ The compromised account was not covered by a Conditional Access policy. In plain
 14. **Conduct BEC awareness training** for finance staff, covering thread hijacking and payment redirect red flags
 15. **Implement MFA push rate limiting**: account lockout after N consecutive failures
 
----
-
 ## 9. Detection Rules Created
 
 Two Sentinel analytics rules were written as a direct output of this hunt.
-
----
 
 **Rule 1: Suspicious Inbox Rule / Minimal or Obfuscated Name**
 
@@ -508,8 +466,6 @@ CloudAppEvents
           IPAddress, ActionType, RawEventData
 | order by TimeGenerated desc
 ```
-
----
 
 **Rule 2: MFA Fatigue / Repeated Failures Followed by Successful Authentication**
 
@@ -532,8 +488,6 @@ failures
 | project UserPrincipalName, IPAddress, FailCount, FirstFail, Success
 ```
 
----
-
 ## 10. Final Assessment
 
 This hunt confirmed a complete six-stage BEC kill chain executed in under 35 minutes with zero internal alerts. The £24,500 wire transfer was stopped by the bank, not by anything inside the organization.
@@ -553,8 +507,6 @@ This hunt confirmed a complete six-stage BEC kill chain executed in under 35 min
 
 The attack succeeded because of policy gaps, not missing technology. Everything needed to prevent this exists in the M365 stack. Until Conditional Access is enforced and external forwarding is blocked, this organization is still exposed.
 
----
-
 ## 11. Analyst Notes
 
 The two-rule combination is the most interesting part of this investigation. Rule 1 is the expected play: forward financial emails to an external address. Rule 2 is what sets this apart. The keyword list (`suspicious`, `security`, `phishing`, `unusual`, `compromised`, `verify`) maps almost exactly to the language Microsoft uses in its own anomalous sign-in notification emails. The attacker built a counter-detection layer specifically designed to suppress Microsoft's native alerting. That's not opportunistic, that's a tested playbook.
@@ -566,8 +518,6 @@ The 35-minute window from MFA approval to fraud email is fast but not frantic. R
 The `Intra-org` email direction is the detail that tends to get overlooked after the fact. External phishing defenses: SPF, DKIM, DMARC, Safe Links, don't apply to email between two internal M365 accounts. The attacker used a compromised internal account precisely because it bypasses the controls organizations spend the most time on. Detection here has to be identity-first.
 
 The `Broke sharing inheritance` events in OneDrive are still unresolved. Most BEC post-incident analysis stops at the email chain and the wire transfer. The file permission changes here suggest the attacker may have been staging data beyond the immediate fraud. That's worth a follow-on investigation.
-
----
 
 ## 12. Lessons Learned & Next Hunt Hypotheses
 
@@ -592,8 +542,6 @@ The `Broke sharing inheritance` events in OneDrive are still unresolved. Most BE
 
 > **H-003:** *"The infostealer that harvested Mark's credentials may still be active on a device in scope. EDR telemetry predating this hunt window may show credential harvesting activity not visible in cloud identity logs."*
 
----
-
 ## 13. Evidence Index
 
 | ID | Screenshot File | Source | Description |
@@ -610,8 +558,6 @@ The `Broke sharing inheritance` events in OneDrive are still unresolved. Most BE
 | E-10 | | `SigninLogs` | Session ID `00225cfa-a0ff-fb46-a079-5d152fcdf72a`, visible in E-06/E-07 |
 | E-11 | | Sentinel | Detection Rule 1: Suspicious Inbox Rule, Minimal Name |
 | E-12 | | Sentinel | Detection Rule 2: MFA Fatigue Pattern |
-
----
 
 *[Katie aka ktx0r] · [4/17/2026]*
 *Microsoft Sentinel Lab*
